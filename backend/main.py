@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import uuid, shutil, os
 import numpy as np
+import cv2
 
 
 from backend.model.yolo import run_yolo
@@ -29,29 +30,26 @@ def health_check():
 
 @app.post("/detect_v2")
 
+@app.post("/detect")
 async def detect(file: UploadFile = File(...)):
-	"""
-	Pipeline:
-	1. Read uploaded image
-	2. Decode image
-	3. Run fusion
-	4. Run YOLO
-	5. Return detections
-	"""
+	try:
+		temp_filename = f"temp_{uuid.uuid4().hex}.jpg"
 
-	contents = await file.read()
+		with open(temp_filename, "wb") as buffer:
+			shutil.copyfileobj(file.file, buffer)
 
-	image_np = np.frombuffer(contents, np.uint8)
-	image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+		detections = run_yolo(temp_filename)
 
-	if image is None:
-		return {"error": "Invalid image file"}
+		os.remove(temp_filename)
 
-	fused_image = fuse_image(image)
-	detections = run_yolo(fused_image)
+		return {
+			"filename": file.filename,
+			"num_detections": len(detections),
+			"detections": detections
+		}
 
-	return {
-		"message": "🔥 THIS IS THE NEW DETECT V2 🔥",
-		"num_detections": len(detections),
-		"detections": detections
-	}
+	except Exception as e:
+		return {
+			"error": str(e),
+			"type": type(e).__name__
+		}

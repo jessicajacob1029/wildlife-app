@@ -1,17 +1,17 @@
 from ultralytics import YOLO
 
-# YOLOv8n (stable on macOS)
 model = YOLO("yolov8n.pt")
 
-def run_yolo(image):
-	results = model(image)[0]
+def run_yolo(image_path):
+	results = model(image_path, device="cpu")
 
 	detections = []
-	for box in results.boxes:
-		detections.append({
-			"class": model.names[int(box.cls)],
-			"confidence": float(box.conf),
-			"bbox": box.xyxy[0].tolist()
-		})
+	for r in results:
+		for box in r.boxes:
+			detections.append({
+				"class": model.names[int(box.cls)],
+				"confidence": float(box.conf),
+				"bbox": [float(x) for x in box.xyxy[0]]
+			})
 
 	return detections
