@@ -17,7 +17,7 @@ app.add_middleware(
 	allow_headers=["*"],
 )
 
-@app.get("/")
+
 @app.get("/")
 def root():
 	return {"message": "RUNNING NEW BACKEND MAIN.PY"}
@@ -25,7 +25,8 @@ def root():
 def health_check():
 	return {"status": "Backend running successfully"}
 
-@app.post("/detect")
+@app.post("/detect_v2")
+
 async def detect(file: UploadFile = File(...)):
 	"""
 	Pipeline:
@@ -48,7 +49,7 @@ async def detect(file: UploadFile = File(...)):
 	detections = run_yolo(fused_image)
 
 	return {
-		"filename": file.filename,
+		"message": "🔥 THIS IS THE NEW DETECT V2 🔥",
 		"num_detections": len(detections),
 		"detections": detections
 	}
