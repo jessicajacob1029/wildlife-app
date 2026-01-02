@@ -11,35 +11,24 @@
 
 <body>
   <div class="app">
-    <h1>Object Detection using Yolo fusion</h1>
+    <h1>Object Detection using Yolo Fusion model</h1>
     <p>Upload an image to detect objects using AI</p>
 
-    <!-- File input -->
-    <input
-      type="file"
-      id="imageInput"
-      accept="image/*"
-    />
+    <input type="file" id="imageInput" accept="image/*" />
 
-    <!-- Image + Canvas wrapper (IMPORTANT) -->
     <div class="canvas-wrap hidden" id="canvasWrap">
       <img id="preview" class="preview" />
       <canvas id="overlay"></canvas>
     </div>
 
-    <!-- Action button -->
-    <button onclick="sendImage()">Detect</button>
+    <button onclick="sendImage()">Detect Wildlife</button>
 
-    <!-- Loader -->
-    <div id="loader" class="loader hidden">
-      Detecting…
-    </div>
+    <div id="loader" class="loader hidden">Detecting…</div>
 
-    <!-- Result JSON -->
     <pre id="result"></pre>
   </div>
 
-  <!-- JavaScript (MUST be last) -->
   <script src="script.js"></script>
 </body>
+
 </html>
