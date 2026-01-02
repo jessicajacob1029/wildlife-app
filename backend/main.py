@@ -1,10 +1,10 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-import numpy as np
-import cv2
+import uuid, shutil, os
 
-from model.fusion import fuse_image
-from model.yolo import run_yolo
+from backend.model.yolo import run_yolo
+from backend.model.fusion import fuse_image
+
 
 app = FastAPI(title="Wildlife Detection API")
 print("🔥 RUNNING backend/main.py 🔥")
