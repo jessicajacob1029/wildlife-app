@@ -2,33 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Object Detection</title>
+  <title>Wildlife Detection</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <div class="app">
-    <h1>Object Detection using Yolo Fusion model</h1>
-    <p>Upload an image to detect objects using AI</p>
+  <!-- FORCE REDEPLOY MARKER -->
+  <h1>Wildlife Detection App</h1>
 
-    <input type="file" id="imageInput" accept="image/*" />
+  <input type="file" id="imageInput" accept="image/*" />
 
-    <div class="canvas-wrap hidden" id="canvasWrap">
-      <img id="preview" class="preview" />
-      <canvas id="overlay"></canvas>
-    </div>
-
-    <button onclick="sendImage()">Detect Wildlife</button>
-
-    <div id="loader" class="loader hidden">Detecting…</div>
-
-    <pre id="result"></pre>
+  <!-- THIS CANVAS MUST EXIST -->
+  <div id="canvasWrap">
+    <img id="preview" />
+    <canvas id="overlay"></canvas>
   </div>
+
+  <button onclick="sendImage()">Detect Wildlife</button>
+
+  <div id="loader">Detecting…</div>
+
+  <pre id="result"></pre>
 
   <script src="script.js"></script>
 </body>
-
 </html>
