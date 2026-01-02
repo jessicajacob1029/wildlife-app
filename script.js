@@ -1,4 +1,5 @@
-window.onload = () => {
+// ✅ Run ONLY after HTML is fully loaded
+window.addEventListener("DOMContentLoaded", () => {
   const input = document.getElementById("imageInput");
   const preview = document.getElementById("preview");
   const overlay = document.getElementById("overlay");
@@ -6,7 +7,12 @@ window.onload = () => {
   const loader = document.getElementById("loader");
   const result = document.getElementById("result");
 
-  // ✅ Now overlay definitely exists
+  // 🔴 SAFETY CHECK (prevents silent failure)
+  if (!overlay) {
+    console.error("Canvas with id='overlay' not found");
+    return;
+  }
+
   const ctx = overlay.getContext("2d");
 
   const API_BASE =
@@ -105,6 +111,6 @@ window.onload = () => {
     });
   }
 
-  // 👇 expose function to HTML button
+  // ✅ EXPOSE FUNCTION TO HTML BUTTON
   window.sendImage = sendImage;
-};
+});
