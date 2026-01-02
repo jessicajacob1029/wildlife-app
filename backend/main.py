@@ -1,14 +1,15 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-import shutil
-import uuid
-import os
+import numpy as np
+import cv2
 
+from model.fusion import fuse_image
 from model.yolo import run_yolo
 
-app = FastAPI()
+app = FastAPI(title="Wildlife Detection API")
+print("🔥 RUNNING backend/main.py 🔥")
 
-# --- CORS (required for GitHub Pages → Render) ---
+# Enable CORS (frontend → backend)
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=["*"],
@@ -17,27 +18,37 @@ app.add_middleware(
 )
 
 @app.get("/")
+@app.get("/")
 def root():
-	return {"message": "Wildlife Detection API is running"}
+	return {"message": "RUNNING NEW BACKEND MAIN.PY"}
+
+def health_check():
+	return {"status": "Backend running successfully"}
 
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
-	# Save uploaded image temporarily
-	temp_filename = f"temp_{uuid.uuid4().hex}.jpg"
+	"""
+	Pipeline:
+	1. Read uploaded image
+	2. Decode image
+	3. Run fusion
+	4. Run YOLO
+	5. Return detections
+	"""
 
-	with open(temp_filename, "wb") as buffer:
-		shutil.copyfileobj(file.file, buffer)
+	contents = await file.read()
 
-	# Run YOLO detection
-	detections = run_yolo(temp_filename)
+	image_np = np.frombuffer(contents, np.uint8)
+	image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
-	# Cleanup temp file
-	os.remove(temp_filename)
+	if image is None:
+		return {"error": "Invalid image file"}
 
-	# IMPORTANT: return detections (frontend expects this)
+	fused_image = fuse_image(image)
+	detections = run_yolo(fused_image)
+
 	return {
 		"filename": file.filename,
 		"num_detections": len(detections),
 		"detections": detections
 	}
-
