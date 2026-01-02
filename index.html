@@ -2,21 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Wildlife Detection</title>
+  <title>Object Detection</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <div class="container">
     <h1>🐾 Wildlife Detection</h1>
-    <p class="subtitle">Upload an image to detect wildlife using AI</p>
+    <p class="subtitle">Upload an image to detect objects using AI</p>
 
     <div class="card">
       <input type="file" id="imageInput" accept="image/*" />
       
-      <img id="preview" class="preview hidden" />
+      <div class="canvas-wrap hidden" id="canvasWrap">
+        <img id="preview" class="preview" />
+        <canvas id="overlay"></canvas>
+      </div>
 
-      <button onclick="sendImage()">Detect Wildlife</button>
+
+
+      <button onclick="sendImage()">Detect </button>
 
       <div id="loader" class="loader hidden"></div>
 
