@@ -1,17 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Wildlife Detection</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <h1>Wildlife Detection</h1>
+  <div class="container">
+    <h1>🐾 Wildlife Detection</h1>
+    <p class="subtitle">Upload an image to detect wildlife using AI</p>
 
-  <input type="file" id="imageInput" />
-  <br><br>
-  <button onclick="sendImage()">Send Image</button>
+    <div class="card">
+      <input type="file" id="imageInput" accept="image/*" />
+      
+      <img id="preview" class="preview hidden" />
 
-  <pre id="result"></pre>
+      <button onclick="sendImage()">Detect Wildlife</button>
+
+      <div id="loader" class="loader hidden"></div>
+
+      <pre id="result" class="result"></pre>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
