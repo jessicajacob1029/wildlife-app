@@ -1,44 +1,101 @@
 const input = document.getElementById("imageInput");
 const preview = document.getElementById("preview");
+const overlay = document.getElementById("overlay");
+const canvasWrap = document.getElementById("canvasWrap");
 const loader = document.getElementById("loader");
 const result = document.getElementById("result");
 
-// Image preview
+const ctx = overlay.getContext("2d");
+
+const API_BASE = "http://127.0.0.1:8000"; // LOCAL TESTING
+
+const COLORS = [
+  "#00E5FF",
+  "#FF6D00",
+  "#76FF03",
+  "#FF1744",
+  "#D500F9",
+  "#FFD600"
+];
+
 input.addEventListener("change", () => {
   const file = input.files[0];
   if (!file) return;
 
   preview.src = URL.createObjectURL(file);
-  preview.classList.remove("hidden");
+  canvasWrap.classList.remove("hidden");
   result.textContent = "";
+
+  preview.onload = () => {
+    overlay.width = preview.clientWidth;
+    overlay.height = preview.clientHeight;
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+  };
 });
 
 async function sendImage() {
+  console.log("🚀 sendImage called");
+
   if (!input.files.length) {
     alert("Please select an image first");
     return;
   }
 
   loader.classList.remove("hidden");
-  result.textContent = "";
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
 
   const formData = new FormData();
   formData.append("file", input.files[0]);
 
   try {
-    const response = await fetch(
-      "https://wildlife-app.onrender.com/detect",
-      {
-        method: "POST",
-        body: formData
-      }
-    );
+    const response = await fetch(`${API_BASE}/detect`, {
+      method: "POST",
+      body: formData
+    });
 
     const data = await response.json();
-    result.textContent = JSON.stringify(data, null, 2);
+    console.log("BACKEND RESPONSE:", data);
+
+    if (data.detections) {
+      drawDetections(data.detections);
+    } else {
+      result.textContent = "⚠️ No detections returned";
+    }
   } catch (err) {
-    result.textContent = "❌ Error connecting to server";
+    console.error(err);
+    result.textContent = "❌ Request failed";
   } finally {
     loader.classList.add("hidden");
   }
+}
+
+function drawDetections(detections) {
+  const scaleX = overlay.width / preview.naturalWidth;
+  const scaleY = overlay.height / preview.naturalHeight;
+
+  detections.forEach((det, i) => {
+    if (det.confidence < 0.5) return;
+
+    const [x1, y1, x2, y2] = det.bbox;
+    const color = COLORS[i % COLORS.length];
+
+    const x = x1 * scaleX;
+    const y = y1 * scaleY;
+    const w = (x2 - x1) * scaleX;
+    const h = (y2 - y1) * scaleY;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+
+    const label = `${det.class} ${(det.confidence * 100).toFixed(1)}%`;
+    ctx.font = "12px Arial";
+    const tw = ctx.measureText(label).width;
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y - 16, tw + 6, 16);
+
+    ctx.fillStyle = "#000";
+    ctx.fillText(label, x + 3, y - 4);
+  });
 }
