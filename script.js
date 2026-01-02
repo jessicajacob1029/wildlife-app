@@ -7,7 +7,10 @@ const result = document.getElementById("result");
 
 const ctx = overlay.getContext("2d");
 
-const API_BASE = "http://127.0.0.1:8000"; // LOCAL TESTING
+const API_BASE =
+location.hostname.includes("github.io")
+  ? "https://wildlife-app.onrender.com"
+  : "http://127.0.0.1:8000";
 
 const COLORS = [
   "#00E5FF",
