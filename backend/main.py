@@ -1,6 +1,8 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import uuid, shutil, os
+import numpy as np
+
 
 from backend.model.yolo import run_yolo
 from backend.model.fusion import fuse_image
