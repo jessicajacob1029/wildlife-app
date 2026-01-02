@@ -3,32 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <title>Object Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
+  <div class="app">
+    <h1>Object Detection using Yolo fusion</h1>
+    <p>Upload an image to detect objects using AI</p>
 
-  <div class="container">
-    <h1>🐾 Wildlife Detection</h1>
-    <p class="subtitle">Upload an image to detect objects using AI</p>
+    <!-- File input -->
+    <input
+      type="file"
+      id="imageInput"
+      accept="image/*"
+    />
 
-    <div class="card">
-      <input type="file" id="imageInput" accept="image/*" />
-      
-      <div class="canvas-wrap hidden" id="canvasWrap">
-        <img id="preview" class="preview" />
-        <canvas id="overlay"></canvas>
-      </div>
-
-
-
-      <button onclick="sendImage()">Detect </button>
-
-      <div id="loader" class="loader hidden"></div>
-
-      <pre id="result" class="result"></pre>
+    <!-- Image + Canvas wrapper (IMPORTANT) -->
+    <div class="canvas-wrap hidden" id="canvasWrap">
+      <img id="preview" class="preview" />
+      <canvas id="overlay"></canvas>
     </div>
+
+    <!-- Action button -->
+    <button onclick="sendImage()">Detect</button>
+
+    <!-- Loader -->
+    <div id="loader" class="loader hidden">
+      Detecting…
+    </div>
+
+    <!-- Result JSON -->
+    <pre id="result"></pre>
   </div>
 
+  <!-- JavaScript (MUST be last) -->
   <script src="script.js"></script>
 </body>
 </html>
