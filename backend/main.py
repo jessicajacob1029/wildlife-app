@@ -6,8 +6,8 @@ import cv2
 
 
 from model.yolo import run_yolo
+from model.fusion import fuse_image
 
-from backend.model.fusion import fuse_image
 
 
 app = FastAPI(title="Wildlife Detection API")
