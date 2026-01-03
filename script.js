@@ -1,116 +1,119 @@
-// ✅ Run ONLY after HTML is fully loaded
-window.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("imageInput");
-  const preview = document.getElementById("preview");
-  const overlay = document.getElementById("overlay");
-  const canvasWrap = document.getElementById("canvasWrap");
-  const loader = document.getElementById("loader");
-  const result = document.getElementById("result");
+// ===============================
+// CONFIG
+// ===============================
+const API_BASE =
+  location.hostname.includes("github.io")
+    ? "https://wildlife-backend-final.onrender.com"
+    : "http://127.0.0.1:8000";
 
-  // 🔴 SAFETY CHECK (prevents silent failure)
-  if (!overlay) {
-    console.error("Canvas with id='overlay' not found");
+// ===============================
+// DOM ELEMENTS
+// ===============================
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const canvas = document.getElementById("overlay");
+const result = document.getElementById("result");
+const loader = document.getElementById("loader");
+
+const ctx = canvas.getContext("2d");
+
+// ===============================
+// IMAGE PREVIEW
+// ===============================
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    preview.src = reader.result;
+    preview.onload = () => {
+      canvas.width = preview.width;
+      canvas.height = preview.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+  };
+  reader.readAsDataURL(file);
+});
+
+// ===============================
+// SEND IMAGE TO BACKEND
+// ===============================
+async function sendImage() {
+  console.log("🚀 sendImage called");
+
+  if (!imageInput.files.length) {
+    alert("Please select an image first");
     return;
   }
 
-  const ctx = overlay.getContext("2d");
+  loader.style.display = "block";
+  result.textContent = "";
 
-  const API_BASE =
-    location.hostname.includes("github.io")
-      ? "https://wildlife-app.onrender.com"
-      : "http://127.0.0.1:8000";
+  const formData = new FormData();
+  formData.append("file", imageInput.files[0]);
 
-  const COLORS = [
-    "#00E5FF",
-    "#FF6D00",
-    "#76FF03",
-    "#FF1744",
-    "#D500F9",
-    "#FFD600"
-  ];
+  try {
+    const response = await fetch(`${API_BASE}/detect`, {
+      method: "POST",
+      body: formData
+    });
 
-  input.addEventListener("change", () => {
-    const file = input.files[0];
-    if (!file) return;
+    console.log("RAW RESPONSE:", response);
 
-    preview.src = URL.createObjectURL(file);
-    canvasWrap.classList.remove("hidden");
-    result.textContent = "";
+    const data = await response.json();
+    console.log("PARSED DATA:", data);
+    console.log("DETECTIONS FIELD:", data.detections);
 
-    preview.onload = () => {
-      overlay.width = preview.clientWidth;
-      overlay.height = preview.clientHeight;
-      ctx.clearRect(0, 0, overlay.width, overlay.height);
-    };
-  });
-
-  async function sendImage() {
-    console.log("🚀 sendImage called");
-
-    if (!input.files.length) {
-      alert("Please select an image first");
+    // ===============================
+    // VALIDATION (IMPORTANT)
+    // ===============================
+    if (!Array.isArray(data.detections) || data.detections.length === 0) {
+      result.textContent = "⚠️ No detections returned";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      loader.style.display = "none";
       return;
     }
 
-    loader.classList.remove("hidden");
-    ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-    const formData = new FormData();
-    formData.append("file", input.files[0]);
-
-    try {
-      const response = await fetch(`${API_BASE}/detect`, {
-        method: "POST",
-        body: formData
-      });
-
-      const data = await response.json();
-      console.log("BACKEND RESPONSE:", data);
-
-      if (data.detections) {
-        drawDetections(data.detections);
-      } else {
-        result.textContent = "⚠️ No detections returned";
-      }
-    } catch (err) {
-      console.error(err);
-      result.textContent = "❌ Request failed";
-    } finally {
-      loader.classList.add("hidden");
-    }
+    // ===============================
+    // SUCCESS
+    // ===============================
+    result.textContent = JSON.stringify(data, null, 2);
+    drawDetections(data.detections);
+  } catch (err) {
+    console.error("ERROR:", err);
+    result.textContent = "❌ Error contacting backend";
   }
 
-  function drawDetections(detections) {
-    const scaleX = overlay.width / preview.naturalWidth;
-    const scaleY = overlay.height / preview.naturalHeight;
+  loader.style.display = "none";
+}
 
-    detections.forEach((det, i) => {
-      if (det.confidence < 0.5) return;
+// ===============================
+// DRAW BOUNDING BOXES
+// ===============================
+function drawDetections(detections) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.lineWidth = 2;
+  ctx.font = "14px Arial";
 
-      const [x1, y1, x2, y2] = det.bbox;
-      const color = COLORS[i % COLORS.length];
+  detections.forEach(det => {
+    const [x1, y1, x2, y2] = det.bbox;
+    const width = x2 - x1;
+    const height = y2 - y1;
 
-      const x = x1 * scaleX;
-      const y = y1 * scaleY;
-      const w = (x2 - x1) * scaleX;
-      const h = (y2 - y1) * scaleY;
+    // Box
+    ctx.strokeStyle = "lime";
+    ctx.strokeRect(x1, y1, width, height);
 
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, w, h);
+    // Label background
+    const label = `${det.class} ${(det.confidence * 100).toFixed(1)}%`;
+    const textWidth = ctx.measureText(label).width;
 
-      const label = `${det.class} ${(det.confidence * 100).toFixed(1)}%`;
-      ctx.font = "12px Arial";
-      const tw = ctx.measureText(label).width;
+    ctx.fillStyle = "lime";
+    ctx.fillRect(x1, y1 - 18, textWidth + 6, 18);
 
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y - 16, tw + 6, 16);
-
-      ctx.fillStyle = "#000";
-      ctx.fillText(label, x + 3, y - 4);
-    });
-  }
-
-  // ✅ EXPOSE FUNCTION TO HTML BUTTON
-  window.sendImage = sendImage;
-});
+    // Label text
+    ctx.fillStyle = "black";
+    ctx.fillText(label, x1 + 3, y1 - 4);
+  });
+}
