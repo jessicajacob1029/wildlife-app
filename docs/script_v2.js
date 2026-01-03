@@ -1,4 +1,8 @@
-console.log("🚨 SCRIPT VERSION 999 LOADED");
+const thresholdSlider = document.getElementById("thresholdSlider");
+const thresholdValue = document.getElementById("thresholdValue");
+
+let lastDetections = [];
+
 
 
 const API_BASE =
@@ -9,12 +13,12 @@ const API_BASE =
 const imageInput = document.getElementById("imageInput");
 const preview = document.getElementById("preview");
 const canvas = document.getElementById("overlay");
-const result = document.getElementById("result");
+const resultList = document.getElementById("resultList");
 const loader = document.getElementById("loader");
 
 const ctx = canvas.getContext("2d");
 
-// Preview image
+/* ================= IMAGE PREVIEW ================= */
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
   if (!file) return;
@@ -23,83 +27,118 @@ imageInput.addEventListener("change", () => {
   reader.onload = () => {
 	preview.src = reader.result;
 	preview.onload = () => {
-	  canvas.width = preview.width;
-	  canvas.height = preview.height;
+	  const rect = preview.getBoundingClientRect();
+	  canvas.width = rect.width;
+	  canvas.height = rect.height;
 	  ctx.clearRect(0, 0, canvas.width, canvas.height);
 	};
   };
   reader.readAsDataURL(file);
 });
+function updateView() {
+  const threshold = thresholdSlider.value / 100;
 
+  const filtered = lastDetections.filter(
+	d => d.confidence >= threshold
+  );
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (filtered.length === 0) {
+	resultList.innerHTML = "<p>No detections above threshold</p>";
+	return;
+  }
+
+  drawDetections(filtered);
+  renderResults(filtered);
+}
+
+/* ================= SEND IMAGE ================= */
 async function sendImage() {
-  console.log("🚀 sendImage START");
-
   if (!imageInput.files.length) {
-	alert("Select an image first");
+	alert("Please select an image first");
 	return;
   }
 
   loader.style.display = "block";
-  result.textContent = "Detecting...";
+  resultList.innerHTML = "";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const formData = new FormData();
   formData.append("file", imageInput.files[0]);
 
   try {
-	console.log("📡 Sending request to backend");
-
 	const response = await fetch(`${API_BASE}/detect`, {
 	  method: "POST",
 	  body: formData
 	});
 
-	console.log("✅ Response received");
-
 	const data = await response.json();
-	console.log("📦 Parsed JSON:", data);
 
-	if (!Array.isArray(data.detections)) {
-	  result.textContent = "❌ Backend response invalid";
-	  console.error("Invalid response shape", data);
+	if (!Array.isArray(data.detections) || data.detections.length === 0) {
+	  resultList.innerHTML = "<p>No detections found</p>";
 	  return;
 	}
 
-	if (data.detections.length === 0) {
-	  result.textContent = "⚠️ No detections returned";
-	  return;
-	}
+	lastDetections = data.detections;
+	updateView();
 
-	result.textContent = JSON.stringify(data, null, 2);
-	drawDetections(data.detections);
   } catch (err) {
-	console.error("🔥 Fetch failed:", err);
-	result.textContent = "❌ Error contacting backend";
+	console.error(err);
+	resultList.innerHTML = "<p>Error contacting backend</p>";
   } finally {
-	console.log("🧹 sendImage END");
 	loader.style.display = "none";
   }
 }
 
+/* ================= DRAW BOXES ================= */
 function drawDetections(detections) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const scaleX = canvas.width / preview.naturalWidth;
+  const scaleY = canvas.height / preview.naturalHeight;
+
   ctx.lineWidth = 2;
-  ctx.font = "14px Arial";
+  ctx.font = "13px Inter";
 
   detections.forEach(det => {
 	const [x1, y1, x2, y2] = det.bbox;
-	const w = x2 - x1;
-	const h = y2 - y1;
 
-	ctx.strokeStyle = "lime";
-	ctx.strokeRect(x1, y1, w, h);
+	const x = x1 * scaleX;
+	const y = y1 * scaleY;
+	const w = (x2 - x1) * scaleX;
+	const h = (y2 - y1) * scaleY;
+
+	ctx.strokeStyle = "#00ff99";
+	ctx.strokeRect(x, y, w, h);
 
 	const label = `${det.class} ${(det.confidence * 100).toFixed(1)}%`;
 	const textWidth = ctx.measureText(label).width;
 
-	ctx.fillStyle = "lime";
-	ctx.fillRect(x1, y1 - 18, textWidth + 6, 18);
+	ctx.fillStyle = "#00ff99";
+	ctx.fillRect(x, y - 18, textWidth + 6, 18);
 
-	ctx.fillStyle = "black";
-	ctx.fillText(label, x1 + 3, y1 - 4);
+	ctx.fillStyle = "#000";
+	ctx.fillText(label, x + 3, y - 4);
   });
 }
+
+/* ================= RESULTS LIST ================= */
+function renderResults(detections) {
+  resultList.innerHTML = "";
+
+  detections.forEach(det => {
+	const item = document.createElement("div");
+	item.className = "result-item";
+	item.innerHTML = `
+	  <span class="label">${det.class}</span>
+	  <span class="conf">${(det.confidence * 100).toFixed(1)}%</span>
+	`;
+	resultList.appendChild(item);
+  });
+}
+thresholdSlider.addEventListener("input", () => {
+  thresholdValue.textContent = `${thresholdSlider.value}%`;
+
+  if (lastDetections.length) {
+	updateView();
+  }
+});
