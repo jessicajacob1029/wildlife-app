@@ -5,7 +5,8 @@ import numpy as np
 import cv2
 
 
-from backend.model.yolo import run_yolo
+from model.yolo import run_yolo
+
 from backend.model.fusion import fuse_image
 
 
