@@ -1,6 +1,8 @@
 // ===============================
 // CONFIG
 // ===============================
+alert("🔥 NEW SCRIPT.JS IS RUNNING 🔥");
+
 const API_BASE =
   location.hostname.includes("github.io")
     ? "https://wildlife-backend-final.onrender.com"
