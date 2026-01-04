@@ -1,3 +1,6 @@
+console.log("✅ script_v2.js loaded");
+
+
 const thresholdSlider = document.getElementById("thresholdSlider");
 const thresholdValue = document.getElementById("thresholdValue");
 
@@ -146,3 +149,4 @@ thresholdSlider.addEventListener("input", () => {
 	updateView();
   }
 });
+document.getElementById("detectBtn").addEventListener("click", sendImage);
