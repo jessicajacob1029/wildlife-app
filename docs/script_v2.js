@@ -1,25 +1,22 @@
 console.log("✅ script_v2.js loaded");
 
+/* ================= CONFIG ================= */
+const API_BASE = "https://wildlife-backend-final.onrender.com";
 
-const thresholdSlider = document.getElementById("thresholdSlider");
-const thresholdValue = document.getElementById("thresholdValue");
-
-let lastDetections = [];
-
-
-
-const API_BASE =
-  location.hostname.includes("github.io")
-	? "https://wildlife-backend-final.onrender.com"
-	: "http://127.0.0.1:8000";
-
+/* ================= DOM ELEMENTS ================= */
 const imageInput = document.getElementById("imageInput");
 const preview = document.getElementById("preview");
 const canvas = document.getElementById("overlay");
-const resultList = document.getElementById("resultList");
 const loader = document.getElementById("loader");
+const resultList = document.getElementById("resultList");
+const thresholdSlider = document.getElementById("thresholdSlider");
+const thresholdValue = document.getElementById("thresholdValue");
+const detectBtn = document.getElementById("detectBtn");
 
 const ctx = canvas.getContext("2d");
+
+/* ================= STATE ================= */
+let lastDetections = [];
 
 /* ================= IMAGE PREVIEW ================= */
 imageInput.addEventListener("change", () => {
@@ -38,6 +35,65 @@ imageInput.addEventListener("change", () => {
   };
   reader.readAsDataURL(file);
 });
+
+/* ================= BUTTON WIRING ================= */
+detectBtn.addEventListener("click", sendImage);
+
+/* ================= THRESHOLD SLIDER ================= */
+thresholdSlider.addEventListener("input", () => {
+  thresholdValue.textContent = `${thresholdSlider.value}%`;
+  if (lastDetections.length) {
+	updateView();
+  }
+});
+
+/* ================= SEND IMAGE ================= */
+async function sendImage() {
+  console.log("🚀 sendImage called");
+
+  if (!imageInput.files.length) {
+	alert("Please select an image first");
+	return;
+  }
+
+  loader.style.display = "block";
+  loader.textContent = "Detecting…";
+  resultList.innerHTML = "";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const formData = new FormData();
+  formData.append("file", imageInput.files[0]);
+
+  try {
+	console.log("1️⃣ Sending request to backend");
+
+	const response = await fetch(`${API_BASE}/detect`, {
+	  method: "POST",
+	  body: formData
+	});
+
+	console.log("2️⃣ Response received");
+
+	const data = await response.json();
+	console.log("3️⃣ Parsed JSON:", data);
+
+	if (!data.detections || !Array.isArray(data.detections)) {
+	  resultList.innerHTML = "<p>No detections returned</p>";
+	  return;
+	}
+
+	lastDetections = data.detections;
+	updateView();
+
+  } catch (err) {
+	console.error("❌ Detection failed:", err);
+	resultList.innerHTML = "<p>Error contacting backend</p>";
+  } finally {
+	loader.style.display = "none";
+  }
+}
+
+/* ================= UPDATE VIEW ================= */
 function updateView() {
   const threshold = thresholdSlider.value / 100;
 
@@ -46,6 +102,7 @@ function updateView() {
   );
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  resultList.innerHTML = "";
 
   if (filtered.length === 0) {
 	resultList.innerHTML = "<p>No detections above threshold</p>";
@@ -54,48 +111,6 @@ function updateView() {
 
   drawDetections(filtered);
   renderResults(filtered);
-}
-
-/* ================= SEND IMAGE ================= */
-async function sendImage() {
-  if (!imageInput.files.length) {
-	alert("Please select an image first");
-	return;
-  }
-
-  loader.style.display = "block";
-  resultList.innerHTML = "";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const formData = new FormData();
-  formData.append("file", imageInput.files[0]);
-  const controller = new AbortController();
-  setTimeout(() => controller.abort(), 120000); 
-  try {
-	const response = await fetch(`${API_BASE}/detect`, {
-	  method: "POST",
-	  body: formData
-	});
-	catch (err) {
-		loader.textContent = "Model is still warming up. Please retry in 30s.";
-	}
-
-	const data = await response.json();
-
-	if (!Array.isArray(data.detections) || data.detections.length === 0) {
-	  resultList.innerHTML = "<p>No detections found</p>";
-	  return;
-	}
-
-	lastDetections = data.detections;
-	updateView();
-
-  } catch (err) {
-	console.error(err);
-	resultList.innerHTML = "<p>Error contacting backend</p>";
-  } finally {
-	loader.style.display = "none";
-  }
 }
 
 /* ================= DRAW BOXES ================= */
@@ -130,8 +145,6 @@ function drawDetections(detections) {
 
 /* ================= RESULTS LIST ================= */
 function renderResults(detections) {
-  resultList.innerHTML = "";
-
   detections.forEach(det => {
 	const item = document.createElement("div");
 	item.className = "result-item";
@@ -142,11 +155,3 @@ function renderResults(detections) {
 	resultList.appendChild(item);
   });
 }
-thresholdSlider.addEventListener("input", () => {
-  thresholdValue.textContent = `${thresholdSlider.value}%`;
-
-  if (lastDetections.length) {
-	updateView();
-  }
-});
-document.getElementById("detectBtn").addEventListener("click", sendImage);
