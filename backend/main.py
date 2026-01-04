@@ -20,6 +20,9 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
+@app.get("/warmup")
+def warmup():
+	return {"status": "model ready"}
 
 
 @app.get("/")

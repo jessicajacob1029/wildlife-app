@@ -66,12 +66,16 @@ async function sendImage() {
 
   const formData = new FormData();
   formData.append("file", imageInput.files[0]);
-
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), 120000); 
   try {
 	const response = await fetch(`${API_BASE}/detect`, {
 	  method: "POST",
 	  body: formData
 	});
+	catch (err) {
+		loader.textContent = "Model is still warming up. Please retry in 30s.";
+	}
 
 	const data = await response.json();
 
