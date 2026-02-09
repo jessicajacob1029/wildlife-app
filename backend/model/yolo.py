@@ -1,9 +1,10 @@
 from ultralytics import YOLO
 
 model = YOLO("yolov8n.pt")
+model.fuse()
 
-def run_yolo(image_path):
-	results = model(image_path, device="cpu")
+def run_yolo(image, imgsz=640):
+	results = model.predict(image, imgsz=imgsz, device="cpu", verbose=False)
 
 	detections = []
 	for r in results:

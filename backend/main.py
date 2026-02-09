@@ -1,12 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-import uuid, shutil, os
+import time
 import numpy as np
 import cv2
 
 
 from model.yolo import run_yolo
-from model.fusion import fuse_image
 
 
 
@@ -37,19 +36,24 @@ def health_check():
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
 	try:
-		temp_filename = f"temp_{uuid.uuid4().hex}.jpg"
+		start = time.time()
+		contents = await file.read()
+		if not contents:
+			return {"error": "Empty file upload", "type": "ValueError"}
 
-		with open(temp_filename, "wb") as buffer:
-			shutil.copyfileobj(file.file, buffer)
+		np_buffer = np.frombuffer(contents, np.uint8)
+		image = cv2.imdecode(np_buffer, cv2.IMREAD_COLOR)
+		if image is None:
+			return {"error": "Unable to decode image", "type": "ValueError"}
 
-		detections = run_yolo(temp_filename)
-
-		os.remove(temp_filename)
+		detections = run_yolo(image)
+		latency_ms = int((time.time() - start) * 1000)
 
 		return {
 			"filename": file.filename,
 			"num_detections": len(detections),
-			"detections": detections
+			"detections": detections,
+			"latency_ms": latency_ms
 		}
 
 	except Exception as e:

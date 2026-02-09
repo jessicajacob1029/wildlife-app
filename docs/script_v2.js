@@ -14,6 +14,7 @@ const thresholdValue = document.getElementById("thresholdValue");
 const detectBtn = document.getElementById("detectBtn");
 const emptyState = document.getElementById("emptyState");
 const latencyEl = document.getElementById("latency");
+const statusBadge = document.getElementById("statusBadge");
 
 const ctx = canvas.getContext("2d");
 
@@ -22,8 +23,34 @@ let lastDetections = [];
 
 /* ================= WARMUP ================= */
 window.addEventListener("load", () => {
-  fetch(`${API_BASE}/warmup`).catch(() => {});
+  checkBackendStatus();
 });
+
+function setStatus(label, state) {
+  if (!statusBadge) return;
+  statusBadge.textContent = label;
+  statusBadge.classList.remove("pending", "online", "offline");
+  statusBadge.classList.add(state);
+}
+
+async function checkBackendStatus() {
+  setStatus("Checking...", "pending");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+
+  try {
+	const response = await fetch(`${API_BASE}/warmup`, { signal: controller.signal });
+	if (response.ok) {
+	  setStatus("Online", "online");
+	} else {
+	  setStatus("Waking up", "pending");
+	}
+  } catch (err) {
+	setStatus("Offline", "offline");
+  } finally {
+	clearTimeout(timer);
+  }
+}
 
 /* ================= IMAGE PREVIEW ================= */
 imageInput.addEventListener("change", () => {
