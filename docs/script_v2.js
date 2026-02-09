@@ -15,6 +15,7 @@ const detectBtn = document.getElementById("detectBtn");
 const emptyState = document.getElementById("emptyState");
 const latencyEl = document.getElementById("latency");
 const statusBadge = document.getElementById("statusBadge");
+const statusHint = document.getElementById("statusHint");
 
 const ctx = canvas.getContext("2d");
 
@@ -33,8 +34,16 @@ function setStatus(label, state) {
   statusBadge.classList.add(state);
 }
 
+function setStatusHint(text) {
+  if (!statusHint) return;
+  statusHint.textContent = text;
+}
+
 async function checkBackendStatus() {
+  if (checkBackendStatus.timer) clearTimeout(checkBackendStatus.timer);
+
   setStatus("Checking...", "pending");
+  setStatusHint("Warming up Render if needed...");
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 6000);
 
@@ -42,11 +51,16 @@ async function checkBackendStatus() {
 	const response = await fetch(`${API_BASE}/warmup`, { signal: controller.signal });
 	if (response.ok) {
 	  setStatus("Online", "online");
+	  setStatusHint("Ready for detection.");
 	} else {
 	  setStatus("Waking up", "pending");
+	  setStatusHint("Render free tier may take ~30s to wake.");
+	  checkBackendStatus.timer = setTimeout(checkBackendStatus, 8000);
 	}
   } catch (err) {
 	setStatus("Offline", "offline");
+	setStatusHint("Backend asleep or unreachable. Retrying...");
+	checkBackendStatus.timer = setTimeout(checkBackendStatus, 10000);
   } finally {
 	clearTimeout(timer);
   }
