@@ -12,17 +12,25 @@ const resultList = document.getElementById("resultList");
 const thresholdSlider = document.getElementById("thresholdSlider");
 const thresholdValue = document.getElementById("thresholdValue");
 const detectBtn = document.getElementById("detectBtn");
+const emptyState = document.getElementById("emptyState");
+const latencyEl = document.getElementById("latency");
 
 const ctx = canvas.getContext("2d");
 
 /* ================= STATE ================= */
 let lastDetections = [];
 
+/* ================= WARMUP ================= */
+window.addEventListener("load", () => {
+  fetch(`${API_BASE}/warmup`).catch(() => {});
+});
+
 /* ================= IMAGE PREVIEW ================= */
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
   if (!file) return;
 
+  detectBtn.disabled = false;
   const reader = new FileReader();
   reader.onload = () => {
 	preview.src = reader.result;
@@ -31,6 +39,7 @@ imageInput.addEventListener("change", () => {
 	  canvas.width = rect.width;
 	  canvas.height = rect.height;
 	  ctx.clearRect(0, 0, canvas.width, canvas.height);
+	  if (emptyState) emptyState.style.display = "none";
 	};
   };
   reader.readAsDataURL(file);
@@ -59,6 +68,7 @@ async function sendImage() {
   loader.style.display = "block";
   loader.textContent = "Detecting…";
   resultList.innerHTML = "";
+  if (latencyEl) latencyEl.textContent = "";
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const formData = new FormData();
@@ -83,6 +93,9 @@ async function sendImage() {
 	}
 
 	lastDetections = data.detections;
+	if (latencyEl && Number.isFinite(data.latency_ms)) {
+	  latencyEl.textContent = `Processed in ${data.latency_ms} ms`;
+	}
 	updateView();
 
   } catch (err) {

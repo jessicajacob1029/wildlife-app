@@ -2,59 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Object Detection</title>
+  <title>Wildlife Field Recognition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Font -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <div class="container">
-    <h1>Object Detection using Yolo fusion</h1>
-    <p class="subtitle">Upload an image to detect objects using AI</p>
+  <div class="page">
+    <header class="hero">
+      <p class="eyebrow">Wildlife Lab</p>
+      <h1>Field Recognition Studio</h1>
+      <p class="subtitle">Upload a trail-cam frame and map what the model sees in seconds.</p>
+    </header>
 
-    <div class="card">
-      <div class="layout">
-
-        <!-- IMAGE + CANVAS -->
-        <div class="image-wrapper">
-          <img id="preview" />
-          <canvas id="overlay"></canvas>
-        </div>
-
-        <!-- RESULTS -->
-        <div class="results">
-          <div class="threshold">
-            <label>
-              Confidence Threshold:
-              <span id="thresholdValue">50%</span>
-            </label>
-            <input
-              type="range"
-              id="thresholdSlider"
-              min="10"
-              max="90"
-              value="50"
-              step="5"
-            />
+    <main class="workspace">
+      <section class="panel panel-visual">
+        <div class="panel-head">
+          <div>
+            <h2>Observation Frame</h2>
+            <p class="panel-subtitle">Adjust confidence to focus on the strongest sightings.</p>
           </div>
-
-          <input type="file" id="imageInput" accept="image/*" />
-          <button id="detectBtn">Detect</button>
-
-          <div id="loader">Detecting…</div>
-
-          <h3>Detections</h3>
-          <div id="resultList"></div>
+          <div class="panel-actions">
+            <input type="file" id="imageInput" accept="image/*" />
+            <label class="file-pill" for="imageInput">Choose Image</label>
+            <button id="detectBtn" disabled>Analyze</button>
+          </div>
         </div>
 
-      </div>
-    </div>
+        <div class="stage">
+          <div class="image-wrapper">
+            <img id="preview" />
+            <canvas id="overlay"></canvas>
+            <div id="emptyState" class="empty-state">
+              <div class="empty-title">No image loaded</div>
+              <div class="empty-copy">Pick a photo to begin detection.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="threshold">
+          <label>
+            Confidence Filter
+            <span id="thresholdValue">50%</span>
+          </label>
+          <input
+            type="range"
+            id="thresholdSlider"
+            min="10"
+            max="90"
+            value="50"
+            step="5"
+          />
+        </div>
+      </section>
+
+      <aside class="panel panel-results">
+        <div class="panel-head compact">
+          <div>
+            <h2>Findings</h2>
+            <p class="panel-subtitle">Detections that meet your threshold.</p>
+          </div>
+        </div>
+        <div id="latency" class="latency"></div>
+        <div id="loader">Analyzing frame…</div>
+        <div id="resultList" class="result-list"></div>
+        <div class="result-hint">Tip: drop the confidence slider to surface more candidates.</div>
+      </aside>
+    </main>
   </div>
 
   <script src="script_v2.js"></script>
