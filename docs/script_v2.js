@@ -1,7 +1,7 @@
 console.log("✅ script_v2.js loaded");
 
 /* ================= CONFIG ================= */
-const API_BASE = "https://wildlife-backend-2xy6.onrender.com";
+const API_BASE = "https://object-detection-backend-2xy6.onrender.com";
 
 /* ================= DOM ELEMENTS ================= */
 const imageInput = document.getElementById("imageInput");

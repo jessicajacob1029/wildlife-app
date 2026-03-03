@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: wildlife-backend
+    name: object-detection-backend
     env: python
     rootDir: backend
     plan: free

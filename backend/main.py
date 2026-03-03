@@ -9,7 +9,7 @@ from model.yolo import run_yolo
 
 
 
-app = FastAPI(title="Wildlife Detection API")
+app = FastAPI(title="Object Detection API")
 print("🔥 RUNNING backend/main.py 🔥")
 
 # Enable CORS (frontend → backend)

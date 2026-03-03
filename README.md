@@ -1,14 +1,14 @@
-# Wildlife Object Detection App
+# Object Detection App
 
 This project provides:
 - A static frontend for uploading an image and visualizing detections.
 - A FastAPI backend that runs YOLOv8 object detection on CPU.
 
 Current frontend URL:
-- https://jessicajacob1029.github.io/wildlife-app/
+- https://jessicajacob1029.github.io/object-detection-app/
 
 Current backend URL:
-- https://wildlife-backend-2xy6.onrender.com
+- https://<your-render-service>.onrender.com
 
 ## Tech Stack
 
@@ -20,7 +20,7 @@ Current backend URL:
 ## Project Structure
 
 ```text
-wildlife-app/
+object-detection-app/
   backend/
     main.py
     requirements.txt
@@ -108,7 +108,7 @@ Example response:
 ```yaml
 services:
   - type: web
-    name: wildlife-backend
+    name: object-detection-backend
     env: python
     rootDir: backend
     plan: free
